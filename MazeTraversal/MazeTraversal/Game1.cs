@@ -11,9 +11,9 @@ namespace MazeTraversal
     {
         MouseState ms;
         KeyboardState ks;
-        Board board = new Board(10, 10, 50);
-        int screenWidth = 500;
-        int screenHeight = 500;
+        Board board = new Board(21, 21, 50);
+        int screenWidth = 1050;
+        int screenHeight = 1050;
 
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -23,7 +23,7 @@ namespace MazeTraversal
         byte drawing = 0;
         Texture2D[] textures = new Texture2D[4];
 
-        int timeTillClear = -1;
+        public static float timeTillClear = -1;
 
         public Game1()
         {
@@ -91,7 +91,7 @@ namespace MazeTraversal
                 if(key == Keys.Enter)
                 {
                     board.overLaySpots.Clear();
-                    board.AStar(board.findStart(), board.findEnd());
+                    board.AStar();
                     timeTillClear = 5;
                 }
             }
@@ -113,6 +113,16 @@ namespace MazeTraversal
                     if (typeOfPressed == pressedPointType)
                     {
                         board.spots[x, y] = drawing;
+                        if(drawing == 2)
+                        {
+                            if(board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] == 2) { board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] = 0; }
+                            board.startPoint = new Vector2(x, y);
+                        }
+                        else if(drawing == 3)
+                        {
+                            if (board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] == 3) { board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] = 0; }
+                            board.endPoint = new Vector2(x, y);
+                        }
                     }
                 }
                 else
@@ -129,6 +139,16 @@ namespace MazeTraversal
                         pressedPointType = 0;
                         drawing = selectedPointType;
                         board.spots[x, y] = drawing;
+                        if (drawing == 2)
+                        {
+                            if (board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] == 2) { board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] = 0; }
+                            board.startPoint = new Vector2(x, y);
+                        }
+                        else if (drawing == 3)
+                        {
+                            if (board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] == 3) { board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] = 0; }
+                            board.endPoint = new Vector2(x, y);
+                        }
                     }
                 }
             }
@@ -139,9 +159,9 @@ namespace MazeTraversal
 
             if(timeTillClear != -1)
             {
-                timeTillClear -= gameTime.ElapsedGameTime.Seconds;
+                timeTillClear -= gameTime.ElapsedGameTime.Milliseconds / 100f;
             }
-            else if(timeTillClear <= 0)
+            if(timeTillClear <= 0)
             {
                 board.overLaySpots.Clear();
                 timeTillClear = -1;
@@ -164,12 +184,12 @@ namespace MazeTraversal
             {
                 for(int y = 0; y < board.height; y++)
                 {
-                    spriteBatch.Draw(textures[board.spots[x, y]], new Vector2(x * board.size, y * board.size), Color.White);
+                    spriteBatch.Draw(textures[board.spots[x, y]], new Vector2(x, y) * board.size, Color.White);
                 }
             }
             foreach(Vector2 position in board.overLaySpots)
             {
-                spriteBatch.Draw(textures[0], position, Color.Blue);
+                spriteBatch.Draw(textures[0], position * board.size, Color.Blue);
             }
             base.Draw(gameTime);
             spriteBatch.End();

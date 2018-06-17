@@ -14,6 +14,8 @@ namespace MazeTraversal
         public int width;
         public int height;
         public int size;
+        public Vector2 startPoint = Vector2.Zero;
+        public Vector2 endPoint = Vector2.Zero;
 
         public Board(int width, int height, int size)
         {
@@ -30,64 +32,43 @@ namespace MazeTraversal
             }
         }
 
-        public Vector2 findStart()
-        {
-            for(int x = 0; x < width; x++)
-            {
-                for(int y = 0; y < height; y++)
-                {
-                    if(spots[x, y] == 2)
-                    {
-                        return new Vector2(x, y);
-                    } 
-                }
-            }
-            return new Vector2(-1, -1);
-        }
-
-        public Vector2 findEnd()
-        {
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    if (spots[x, y] == 3)
-                    {
-                        return new Vector2(x, y);
-                    }
-                }
-            }
-            return new Vector2(-1, -1);
-        }
-
         List<(Vector2, float, Vector2)> getConnections(Vector2 point)
         {
             List<(Vector2, float, Vector2)> availableConnections = new List<(Vector2, float, Vector2)>();
 
-            for(int x = (int)point.X - 1; x <= point.X + 1; x++)
-            {
-                if (x < 0 || x >= width) { continue; }
-                for (int y = (int)point.Y - 1; y <= point.Y + 1; y++)
-                {
-                    if (y < 0 || y >= height) { continue; }
-                    if (x == point.X && y == point.Y) { continue; }
-
-                    availableConnections.Add((point, 0, new Vector2(x, y)));
-                }
-            }
+            int x = (int)point.X - 1;
+            int y = (int)point.Y;
+            if (checkConnection(x, y)) { availableConnections.Add((point, 0, new Vector2(x, y))); }
+            x = (int)point.X + 1;
+            y = (int)point.Y;
+            if (checkConnection(x, y)) { availableConnections.Add((point, 0, new Vector2(x, y))); }
+            x = (int)point.X;
+            y = (int)point.Y + 1;
+            if (checkConnection(x, y)) { availableConnections.Add((point, 0, new Vector2(x, y))); }
+            x = (int)point.X;
+            y = (int)point.Y - 1;
+            if (checkConnection(x, y)) { availableConnections.Add((point, 0, new Vector2(x, y))); }
 
             return availableConnections;
         }
 
-        public void AStar(Vector2 start, Vector2 end)
+        bool checkConnection(int x, int y)
+        {
+            if (x < 0 || x >= width) { return false; }
+            if (y < 0 || y >= height) { return false; }
+            if(spots[x, y] == 1) { return false; }
+            return true;
+        }
+
+        public void AStar()
         {
             Dictionary<Vector2, (float, Vector2)> costs = new Dictionary<Vector2, (float, Vector2)>();
 
-            costs.Add(start, (0, new Vector2(-1, -1)));
+            costs.Add(startPoint, (ManhattanDistance(startPoint, endPoint), new Vector2(-1, -1)));
 
             List<(Vector2, float, Vector2)> currentConnections = new List<(Vector2, float, Vector2)>();
 
-            currentConnections.AddRange(getConnections(start));
+            currentConnections.AddRange(getConnections(startPoint));
 
             while (currentConnections.Count > 0)
             {
@@ -97,7 +78,7 @@ namespace MazeTraversal
                 for (int c = 0; c < currentConnections.Count; c++)
                 {
                     (Vector2, float, Vector2) connection = currentConnections[c];
-                    float cost = connection.Item2 + costs[connection.Item1].Item1 + ManhattanDistance(connection.Item3, end);
+                    float cost = connection.Item2 + costs[connection.Item1].Item1 - ManhattanDistance(connection.Item1, endPoint) + ManhattanDistance(connection.Item3, endPoint) + 1;
                     if (cost < lowestCost)
                     {
                         if (costs.ContainsKey(connection.Item3))
@@ -114,20 +95,65 @@ namespace MazeTraversal
 
                 currentConnections.Remove(lowestEdge);
                 costs.Add(lowestEdge.Item3, (lowestCost, lowestEdge.Item1));
+                if(lowestEdge.Item3 == endPoint)
+                {
+                    break;
+                }
                 currentConnections.AddRange(getConnections(lowestEdge.Item3));
             }
-            Vector2 currentSpot = costs[end].Item2;
-            while(currentSpot != start)
+            Vector2 currentSpot = costs[endPoint].Item2;
+            while(currentSpot != startPoint)
             {
                 overLaySpots.Add(currentSpot);
                 currentSpot = costs[currentSpot].Item2;
             }
+            Game1.timeTillClear = 10;
         }
 
         public float ManhattanDistance(Vector2 start, Vector2 target)
         {
-            float distance = Math.Abs(target.X - start.X) + Math.Abs(target.Y - target.Y);
+            float distance = Math.Abs(target.X - start.X) + Math.Abs(target.Y - start.Y);
             return distance;
+        }
+
+        public void Prim()
+        {
+            for(int x = 0; x < width; x++)
+            {
+                for(int y = 0; y < height; y++)
+                {
+                    spots[x, y] = 1;
+                }
+            }
+            spots[(int)startPoint.X, (int)startPoint.Y] = 2;
+
+            List<Vector2> cells = new List<Vector2>() { startPoint };
+
+            List<Vector2> walls = new List<Vector2>();
+            walls.AddRange(getWalls(startPoint));
+
+            while(walls.Count > 0)
+            {
+
+            }
+        }
+
+        List<Vector2> getWalls(Vector2 position)
+        {
+            List<Vector2> walls = new List<Vector2>();
+            for (int x = (int)position.X - 1; x < position.X + 1; x++)
+            {
+                if (x < 0 || x >= width) { continue; }
+                for (int y = (int)position.Y - 1; y < position.Y + 1; y++)
+                {
+                    if (y < 0 || y >= height) { continue; }
+                    if (spots[x, y] != 1) { continue; }
+                    if (x == position.X && y == position.Y) { continue; }
+
+                    walls.Add(new Vector2(x, y));
+                }
+            }
+            return walls;
         }
     }
 }
