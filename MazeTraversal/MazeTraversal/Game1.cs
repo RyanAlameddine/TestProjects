@@ -22,6 +22,7 @@ namespace MazeTraversal
         byte pressedPointType = 0;
         byte drawing = 0;
         Texture2D[] textures = new Texture2D[4];
+        bool generating = false;
 
         public static float timeTillClear = -1;
 
@@ -82,6 +83,7 @@ namespace MazeTraversal
             ks = Keyboard.GetState();
 
             Keys[] keys = ks.GetPressedKeys();
+            bool tab = false;
             foreach(Keys key in keys)
             {
                 if (key > Keys.D0 && key < Keys.D9)
@@ -92,9 +94,20 @@ namespace MazeTraversal
                 {
                     board.overLaySpots.Clear();
                     board.AStar();
-                    timeTillClear = 5;
+                    timeTillClear = 10;
+                }
+                if(key == Keys.Tab)
+                {
+                    tab = true;
+                    if (!generating)
+                    {
+                        board.Prim();
+                        timeTillClear = 10;
+                        generating = true;
+                    }
                 }
             }
+            if(!tab) { generating = false; }
 
             if(ms.LeftButton == ButtonState.Pressed)
             {
@@ -113,12 +126,12 @@ namespace MazeTraversal
                     if (typeOfPressed == pressedPointType)
                     {
                         board.spots[x, y] = drawing;
-                        if(drawing == 2)
+                        if (drawing == 2)
                         {
-                            if(board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] == 2) { board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] = 0; }
+                            if (board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] == 2) { board.spots[(int)board.startPoint.X, (int)board.startPoint.Y] = 0; }
                             board.startPoint = new Vector2(x, y);
                         }
-                        else if(drawing == 3)
+                        else if (drawing == 3)
                         {
                             if (board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] == 3) { board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] = 0; }
                             board.endPoint = new Vector2(x, y);
@@ -128,11 +141,15 @@ namespace MazeTraversal
                 else
                 {
                     pressed = true;
+                    
                     if(typeOfPressed != 0)
                     {
-                        pressedPointType = typeOfPressed;
-                        drawing = 0;
-                        board.spots[x, y] = 0;
+                        if (typeOfPressed != 2 && typeOfPressed != 3)
+                        {
+                            pressedPointType = typeOfPressed;
+                            drawing = 0;
+                            board.spots[x, y] = 0;
+                        }
                     }
                     else
                     {
