@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace MazeTraversal
 {
@@ -23,6 +24,7 @@ namespace MazeTraversal
         byte drawing = 0;
         Texture2D[] textures = new Texture2D[4];
         bool generating = false;
+        List<(Vector2, byte)> edits = new List<(Vector2, byte)>();
 
         public static float timeTillClear = -1;
 
@@ -45,6 +47,15 @@ namespace MazeTraversal
             graphics.PreferredBackBufferWidth = screenWidth;
             graphics.PreferredBackBufferHeight = screenHeight;
             graphics.ApplyChanges();
+
+            UnionFind unionFind = new UnionFind(10);
+            unionFind.Union(2, 1);
+            unionFind.Union(3, 1);
+            unionFind.Union(5, 4);
+            unionFind.Union(7, 5);
+            unionFind.Union(6, 5);
+            unionFind.Union(1, 7);
+
             base.Initialize();
         }
 
@@ -84,19 +95,20 @@ namespace MazeTraversal
 
             Keys[] keys = ks.GetPressedKeys();
             bool tab = false;
+            bool ctrlz = false;
             foreach(Keys key in keys)
             {
                 if (key > Keys.D0 && key < Keys.D9)
                 {
                     selectedPointType = (byte) (key - Keys.D0);
                 }
-                if(key == Keys.Enter)
+                else if(key == Keys.Enter)
                 {
                     board.overLaySpots.Clear();
                     board.AStar();
                     timeTillClear = 10;
                 }
-                if(key == Keys.Tab)
+                else if(key == Keys.Tab)
                 {
                     tab = true;
                     if (!generating)
@@ -104,6 +116,17 @@ namespace MazeTraversal
                         board.Prim();
                         timeTillClear = 10;
                         generating = true;
+                    }
+                }
+                else if(key == Keys.LeftControl || key==Keys.RightControl || key == Keys.Z)
+                {
+                    if (!ctrlz)
+                    {
+                        ctrlz = true;
+                    }
+                    else
+                    {
+                        
                     }
                 }
             }
@@ -136,6 +159,10 @@ namespace MazeTraversal
                             if (board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] == 3) { board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] = 0; }
                             board.endPoint = new Vector2(x, y);
                         }
+                        else
+                        {
+                            edits.Add((new Vector2(x, y), typeOfPressed));
+                        }
                     }
                 }
                 else
@@ -149,6 +176,7 @@ namespace MazeTraversal
                             pressedPointType = typeOfPressed;
                             drawing = 0;
                             board.spots[x, y] = 0;
+                            edits.Add((new Vector2(x, y), typeOfPressed));
                         }
                     }
                     else
@@ -165,6 +193,10 @@ namespace MazeTraversal
                         {
                             if (board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] == 3) { board.spots[(int)board.endPoint.X, (int)board.endPoint.Y] = 0; }
                             board.endPoint = new Vector2(x, y);
+                        }
+                        else
+                        {
+                            edits.Add((new Vector2(x, y), typeOfPressed));
                         }
                     }
                 }
