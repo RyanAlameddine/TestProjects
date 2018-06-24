@@ -66,7 +66,7 @@ namespace MazeTraversal
                 }
                 spots[root1] -= height2;
             }
-
+            Find(index1, index2);
         }
 
         public int Find(int index1, int index2)

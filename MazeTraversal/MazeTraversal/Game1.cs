@@ -48,14 +48,6 @@ namespace MazeTraversal
             graphics.PreferredBackBufferHeight = screenHeight;
             graphics.ApplyChanges();
 
-            UnionFind unionFind = new UnionFind(10);
-            unionFind.Union(2, 1);
-            unionFind.Union(3, 1);
-            unionFind.Union(5, 4);
-            unionFind.Union(7, 5);
-            unionFind.Union(6, 5);
-            unionFind.Union(1, 7);
-
             base.Initialize();
         }
 
@@ -114,6 +106,16 @@ namespace MazeTraversal
                     if (!generating)
                     {
                         board.Prim();
+                        timeTillClear = 10;
+                        generating = true;
+                    }
+                }
+                else if (key == Keys.LeftShift)
+                {
+                    tab = true;
+                    if (!generating)
+                    {
+                        board.UnionFindGen();
                         timeTillClear = 10;
                         generating = true;
                     }
