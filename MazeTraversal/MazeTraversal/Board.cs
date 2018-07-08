@@ -208,41 +208,56 @@ namespace MazeTraversal
             spots[(int)startPoint.X, (int)startPoint.Y] = 2;
 
             UnionFind unionFind = new UnionFind(length);
-            while(unconnected.Count > 0)
+            bool finished = false;
+            while (!finished)
             {
-                int randIndex = unconnected[rand.Next(0, unconnected.Count)];
-                (int, int) pos = getPos(indicies, randIndex);
-                (int, int) targetPos;
-                do
+                for (int i = 0; i < length*2; i++)
                 {
-                    int randDir = rand.Next(0, 4);
-                    if (randDir == 0)
+                    int randIndex = unconnected[rand.Next(0, unconnected.Count)];
+                    (int, int) pos = getPos(indicies, randIndex);
+                    (int, int) targetPos;
+                    do
                     {
-                        targetPos = (pos.Item1 + 1, pos.Item2);
-                    }
-                    else if (randDir == 1)
-                    {
-                        targetPos = (pos.Item1 - 1, pos.Item2);
-                    }
-                    else if (randDir == 2)
-                    {
-                        targetPos = (pos.Item1, pos.Item2 - 1);
-                    }
-                    else
-                    {
-                        targetPos = (pos.Item1, pos.Item2 + 1);
-                    }
-                } while (targetPos.Item1 < 0 || targetPos.Item1 >= width || targetPos.Item2 < 0 || targetPos.Item2 >= height);
-                (int, int) endPoint = (pos.Item1 + 2 * (targetPos.Item1 - pos.Item1), pos.Item2 + 2 * (targetPos.Item2 - pos.Item2));
-                int endIndex = indicies[endPoint.Item1, endPoint.Item2];
+                        int randDir = rand.Next(0, 4);
+                        if (randDir == 0)
+                        {
+                            targetPos = (pos.Item1 + 1, pos.Item2);
+                        }
+                        else if (randDir == 1)
+                        {
+                            targetPos = (pos.Item1 - 1, pos.Item2);
+                        }
+                        else if (randDir == 2)
+                        {
+                            targetPos = (pos.Item1, pos.Item2 - 1);
+                        }
+                        else
+                        {
+                            targetPos = (pos.Item1, pos.Item2 + 1);
+                        }
+                    } while (targetPos.Item1 < 0 || targetPos.Item1 >= width || targetPos.Item2 < 0 || targetPos.Item2 >= height);
+                    (int, int) endPoint = (pos.Item1 + 2 * (targetPos.Item1 - pos.Item1), pos.Item2 + 2 * (targetPos.Item2 - pos.Item2));
+                    int endIndex = indicies[endPoint.Item1, endPoint.Item2];
 
-                if (unionFind.Find(randIndex, endIndex) != -1)
-                {
-                    continue;
+                    if (unionFind.Find(randIndex, endIndex) != -1)
+                    {
+                        continue;
+                    }
+                    spots[targetPos.Item1, targetPos.Item2] = 0;
+                    unionFind.Union(randIndex, endIndex);
                 }
-                spots[targetPos.Item1, targetPos.Item2] = 0;
-                unionFind.Union(randIndex, endIndex);
-                unconnected.Remove(randIndex);
+
+                finished = true;
+                //check if done
+                for(int i = 0; i < length/2 + 1; i++)
+                {
+                    if(unionFind.Find(i, length-i-1) == -1)
+                    {
+                        finished = false;
+                        break;
+                    }
+                }
+                
             }
         }
 
