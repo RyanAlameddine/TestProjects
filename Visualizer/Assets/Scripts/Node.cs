@@ -5,6 +5,7 @@ using UnityEngine;
 public class Node : MonoBehaviour {
     
     public int index;
+    public int item;
     public Transform target;
 
     public Rigidbody2D rigidBody;
@@ -19,7 +20,7 @@ public class Node : MonoBehaviour {
         AnimationCurve curve = new AnimationCurve();
         curve.AddKey(0, .1f);
         curve.AddKey(.4f, .1f);
-        curve.AddKey(.4001f, .7f);
+        curve.AddKey(.4001f, .5f);
         curve.AddKey(.5f, .1f);
         curve.AddKey(1, .1f);
         lineRenderer.widthCurve = curve;
