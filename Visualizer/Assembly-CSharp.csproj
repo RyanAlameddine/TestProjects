@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\MouseControls.cs" />
     <Compile Include="Assets\Scripts\Node.cs" />
+    <Compile Include="Assets\Scripts\NodeLine.cs" />
     <Compile Include="Assets\Scripts\NodeManager.cs" />
     <Compile Include="Assets\Scripts\Pin.cs" />
     <Compile Include="Assets\Scripts\TextScroll.cs" />

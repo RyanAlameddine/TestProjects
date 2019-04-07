@@ -18,6 +18,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Collections.Concurrent;
 
 /// Author: Pim de Witte (pimdewitte.com) and contributors
 /// <summary>
@@ -26,17 +27,17 @@ using System;
 /// </summary>
 public class UnityMainThreadDispatcher : MonoBehaviour
 {
-
-    private static readonly Queue<Action> _executionQueue = new Queue<Action>();
+    private static readonly ConcurrentQueue<Action> concurrentQueue = new ConcurrentQueue<Action>();
 
     public void Update()
     {
-        lock (_executionQueue)
+        int count = 0;
+        Action action;
+        while(concurrentQueue.TryDequeue(out action))
         {
-            while (_executionQueue.Count > 0)
-            {
-                _executionQueue.Dequeue().Invoke();
-            }
+            count++;
+            action();
+            if (count > 20) break;
         }
     }
 
@@ -46,12 +47,7 @@ public class UnityMainThreadDispatcher : MonoBehaviour
     /// <param name="action">IEnumerator function that will be executed from the main thread.</param>
     public void Enqueue(IEnumerator action)
     {
-        lock (_executionQueue)
-        {
-            _executionQueue.Enqueue(() => {
-                StartCoroutine(action);
-            });
-        }
+        concurrentQueue.Enqueue(() => { StartCoroutine(action); });
     }
 
     /// <summary>

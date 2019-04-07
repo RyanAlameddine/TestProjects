@@ -25,6 +25,20 @@ public class MouseControls : MonoBehaviour {
                 Debug.Log(hit);
             }
         }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                // Construct a ray from the current mouse coordinates
+                var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit2D hit = Physics2D.Raycast(new Vector2(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y), Vector2.zero, 0f);
+
+                if (hit)
+                {
+                    nodeManager.DeletePin(hit.transform.gameObject);
+                }
+            }
+        }
 
         if (holding != null)
         {

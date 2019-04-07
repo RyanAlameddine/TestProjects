@@ -492,6 +492,8 @@ MonoBehaviour:
   canvas: {fileID: 938031582}
   textPrefab: {fileID: 1321866884806716, guid: 114579b16f49b814d8c20aca343e0c4a, type: 2}
   pinPrefab: {fileID: 1776282960873316, guid: 1f6a329242949f845bf0a7c0edc2b64b, type: 2}
+  nodeLinePrefab: {fileID: 1757136231919696, guid: 0607f257cddd3ce49b82f145448b69d9,
+    type: 2}
   gradient:
     serializedVersion: 2
     key0: {r: 0.735849, g: 0.03818085, b: 0.34549522, a: 1}
@@ -577,6 +579,21 @@ Prefab:
       propertyPath: m_Name
       value: EndPin
       objectReference: {fileID: 0}
+    - target: {fileID: 212982963172159708, guid: 1f6a329242949f845bf0a7c0edc2b64b,
+        type: 2}
+      propertyPath: m_Color.r
+      value: 0.8301887
+      objectReference: {fileID: 0}
+    - target: {fileID: 212982963172159708, guid: 1f6a329242949f845bf0a7c0edc2b64b,
+        type: 2}
+      propertyPath: m_Color.g
+      value: 0.22366433
+      objectReference: {fileID: 0}
+    - target: {fileID: 212982963172159708, guid: 1f6a329242949f845bf0a7c0edc2b64b,
+        type: 2}
+      propertyPath: m_Color.b
+      value: 0.19971518
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1f6a329242949f845bf0a7c0edc2b64b, type: 2}
   m_IsPrefabParent: 0
@@ -638,17 +655,17 @@ Prefab:
     - target: {fileID: 212982963172159708, guid: 1f6a329242949f845bf0a7c0edc2b64b,
         type: 2}
       propertyPath: m_Color.r
-      value: 0.1699448
+      value: 0.08646317
       objectReference: {fileID: 0}
     - target: {fileID: 212982963172159708, guid: 1f6a329242949f845bf0a7c0edc2b64b,
         type: 2}
       propertyPath: m_Color.g
-      value: 0.5377358
+      value: 0.6320754
       objectReference: {fileID: 0}
     - target: {fileID: 212982963172159708, guid: 1f6a329242949f845bf0a7c0edc2b64b,
         type: 2}
       propertyPath: m_Color.b
-      value: 0.17942627
+      value: 0.16867983
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 1f6a329242949f845bf0a7c0edc2b64b, type: 2}

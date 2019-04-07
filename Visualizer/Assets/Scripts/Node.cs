@@ -7,16 +7,16 @@ public class Node : MonoBehaviour {
     
     public int index;
     public int item;
-    public Transform target;
+    //public Transform target;
 
     public Rigidbody2D rigidBody;
 
-    LineRenderer lineRenderer;
+    //LineRenderer lineRenderer;
     
 
 	void Awake () {
         rigidBody = GetComponent<Rigidbody2D>();
-        lineRenderer = GetComponent<LineRenderer>();
+        /*lineRenderer = GetComponent<LineRenderer>();
 
         AnimationCurve curve = new AnimationCurve();
         curve.AddKey(0, .1f);
@@ -24,10 +24,10 @@ public class Node : MonoBehaviour {
         curve.AddKey(.4001f, .5f);
         curve.AddKey(.5f, .1f);
         curve.AddKey(1, .1f);
-        lineRenderer.widthCurve = curve;
+        lineRenderer.widthCurve = curve;*/
     }
 
-    public void CalculateLineRenderer()
+    /*public void CalculateLineRenderer()
     {
         if (lineRenderer.enabled)
         {
@@ -37,10 +37,10 @@ public class Node : MonoBehaviour {
             lineRenderer.SetPosition(3, Vector3.Lerp(transform.position, target.position, .5f));
             lineRenderer.SetPosition(4, target.position);
         }
-    }
+    }*/
 
     // Update is called once per frame
     void Update () {
-        CalculateLineRenderer();
+        //CalculateLineRenderer();
 	}
 }

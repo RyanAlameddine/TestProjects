@@ -23,6 +23,7 @@ public class NodeManager : MonoBehaviour
     public Canvas canvas;
     public GameObject textPrefab;
     public GameObject pinPrefab;
+    public GameObject nodeLinePrefab;
 
     public Gradient gradient;
 
@@ -34,7 +35,7 @@ public class NodeManager : MonoBehaviour
 
     CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-    public IEnumerator VisualizerUpdate(IEnumerable<int> positions, string message)
+    public IEnumerator VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
     {
         Text text = Instantiate(textPrefab, canvas.transform).GetComponent<Text>();
         text.text = message;
@@ -84,7 +85,7 @@ public class NodeManager : MonoBehaviour
             pinLinks.Remove(item);
         }
 
-        GenerateNodes(false);
+        GenerateNodes(connections);
         yield return null;
     }
 
@@ -94,14 +95,13 @@ public class NodeManager : MonoBehaviour
         var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
 
         //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
-
-        GenerateNodes();
+        
 
         IRunnable<int> runnable = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x)).First();
 
-        runnable.Visualizable.OnUpdate += (positions, message) =>
+        runnable.Visualizable.OnUpdate += (positions, connections, message) =>
         {
-            UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, message));
+            UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, connections, message));
 
             lock (lockObject)
             {
@@ -116,28 +116,31 @@ public class NodeManager : MonoBehaviour
         t.Start();
 	}
 
-    void GenerateNodes(bool createNodes = true)
+    void GenerateNodes(List<List<int>> connections)
     {
         for (int i = 0; i < nodeCount; i++)
         {
-            if (createNodes)
+
+            foreach(int connectionIndex in connections[i])
             {
-                createNodeObject(new Vector3(Random.value * 10 - 5, Random.value * 10 - 5), i, (int)Random.Range(int.MinValue, int.MaxValue));
+                Debug.Log(connectionIndex);
+                AttachNodeLine(nodes[i], nodes[connectionIndex].transform);
+
+                attach(nodes[i].gameObject, nodes[connectionIndex].gameObject);
+                attach(nodes[connectionIndex].gameObject, nodes[i].gameObject);
             }
 
-            generateColorGradient(nodes[i], i);
-
+            /*
             if (i > 0)
             {
-                nodes[i - 1].target = nodes[i].transform;
-                nodes[i - 1].CalculateLineRenderer();
+                AttachNodeLine(nodes[i - 1], nodes[i].transform);
 
                 attach(nodes[i - 1].gameObject, nodes[i].gameObject);
                 attach(nodes[i].gameObject, nodes[i - 1].gameObject);
-            }
+            }*/
         }
 
-        nodes[nodes.Count - 1].GetComponent<LineRenderer>().enabled = false;
+        //nodes[nodes.Count - 1].GetComponent<LineRenderer>().enabled = false;
         if (startPin != null)
         {
             AttachToPin(nodes[0].gameObject, startPin);
@@ -148,6 +151,15 @@ public class NodeManager : MonoBehaviour
         }
     }
 
+    public void AttachNodeLine(Node node, Transform target)
+    {
+        GameObject nodeLine = Instantiate(nodeLinePrefab, node.transform);
+        var line = nodeLine.GetComponent<NodeLine>();
+        line.target = target;
+        line.CalculateLineRenderer();
+
+        generateColorGradient(node, nodeLine.GetComponent<LineRenderer>());
+    }
 
     public void Pin(Node holding, Vector3 position)
     {
@@ -156,6 +168,22 @@ public class NodeManager : MonoBehaviour
         pinLinks.Add(holding.item, pin);
 
         AttachToPin(holding.gameObject, pin.GetComponent<Pin>());
+    }
+
+    public void DeletePin(GameObject gameObject)
+    {
+        pinLinks.Where(linkPair => linkPair.Value == gameObject).Select((linkPair) =>
+        {
+            nodes.Where(node => node.GetComponents<SpringJoint2D>().Where(sj => sj.connectedBody == gameObject).Select((joint) => 
+            {
+                Destroy(joint);
+                return true;
+            }));
+            pinLinks.Remove(linkPair.Key);
+            return linkPair.Key;
+        });
+
+
     }
 
     private void AttachToPin(GameObject node, Pin pin)
@@ -179,6 +207,8 @@ public class NodeManager : MonoBehaviour
         return joint;
     }
 
+
+
     GameObject createNodeObject(Vector3 position, int index, int item)
     {
         GameObject newNode = Instantiate(nodePrefab, position, Quaternion.identity);
@@ -194,7 +224,7 @@ public class NodeManager : MonoBehaviour
         return newNode;
     }
 
-    void generateColorGradient(Node node, int index)
+    void generateColorGradient(Node node, LineRenderer lineRenderer)
     {
         Gradient colorGradient = new Gradient();
 
@@ -204,7 +234,7 @@ public class NodeManager : MonoBehaviour
         endColor = directionEndColor;
 
         colorGradient.colorKeys = new GradientColorKey[] { new GradientColorKey(startColor, 0), new GradientColorKey(endColor, 1) };
-        node.GetComponent<LineRenderer>().colorGradient = colorGradient;
+        lineRenderer.colorGradient = colorGradient;
     }
 	
 	// Update is called once per frame
