@@ -60,8 +60,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\MouseControls.cs" />
     <Compile Include="Assets\Scripts\Node.cs" />
     <Compile Include="Assets\Scripts\NodeManager.cs" />
+    <Compile Include="Assets\Scripts\Pin.cs" />
     <Compile Include="Assets\Scripts\TextScroll.cs" />
     <Compile Include="Assets\Scripts\UnityMainThreadDispatcher.cs" />
     <Reference Include="UnityEditor.StandardEvents">

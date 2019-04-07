@@ -17,15 +17,18 @@ public class NodeManager : MonoBehaviour
     public int nodeCount = 5;
     public float distance = 5;
     public float frequency = 10;
-    public Rigidbody2D startPin;
-    public Rigidbody2D endPin;
+    public Pin startPin;
+    public Pin endPin;
     public Color directionEndColor;
     public Canvas canvas;
     public GameObject textPrefab;
+    public GameObject pinPrefab;
 
     public Gradient gradient;
 
     List<Node> nodes = new List<Node>();
+
+    Dictionary<int, GameObject> pinLinks = new Dictionary<int, GameObject>();
 
     private object lockObject = new object();
 
@@ -47,17 +50,44 @@ public class NodeManager : MonoBehaviour
             }
             Destroy(node.gameObject);
         }
+        
         nodes.Clear();
         Debug.Log("Updated");
         foreach (int item in positions)
         {
-            if(existingPositions.ContainsKey())
-            createNodeObject(new Vector3(Random.value * 10 - 5, Random.value * 10 - 5), i, item);
+            if (existingPositions.ContainsKey(item))
+            {
+                GameObject newNode = createNodeObject(existingPositions[item], i, item);
+                if (pinLinks.ContainsKey(item))
+                {
+                    AttachToPin(newNode, pinLinks[item].GetComponent<Pin>());
+                }
+            }
+            else
+            {
+                createNodeObject(new Vector3(Random.value * 10 - 5, Random.value * 10 - 5), i, item);
+            }
             i++;
         }
+
+        LinkedList<int> toRemove = new LinkedList<int>();
+        foreach (var item in pinLinks.Keys)
+        {
+            if (nodes.Where(x => x.item == item).Count() == 0)
+            {
+                toRemove.AddFirst(item);
+            }
+        }
+        foreach (int item in toRemove)
+        {
+            Destroy(pinLinks[item]);
+            pinLinks.Remove(item);
+        }
+
         GenerateNodes(false);
         yield return null;
     }
+
 
     void Start () {
 
@@ -100,6 +130,7 @@ public class NodeManager : MonoBehaviour
             if (i > 0)
             {
                 nodes[i - 1].target = nodes[i].transform;
+                nodes[i - 1].CalculateLineRenderer();
 
                 attach(nodes[i - 1].gameObject, nodes[i].gameObject);
                 attach(nodes[i].gameObject, nodes[i - 1].gameObject);
@@ -109,16 +140,32 @@ public class NodeManager : MonoBehaviour
         nodes[nodes.Count - 1].GetComponent<LineRenderer>().enabled = false;
         if (startPin != null)
         {
-            SpringJoint2D joint = attach(nodes[0].gameObject, startPin.gameObject);
-            joint.frequency = 2;
-            joint.distance = 0;
+            AttachToPin(nodes[0].gameObject, startPin);
         }
         if (endPin != null)
         {
-            SpringJoint2D joint = attach(nodes[nodes.Count - 1].gameObject, endPin.gameObject);
-            joint.frequency = 2;
-            joint.distance = 0;
+            AttachToPin(nodes[nodes.Count - 1].gameObject, endPin);
         }
+    }
+
+
+    public void Pin(Node holding, Vector3 position)
+    {
+        GameObject pin = Instantiate(pinPrefab, position, Quaternion.identity);
+        pin.GetComponent<SpriteRenderer>().color = holding.GetComponent<SpriteRenderer>().color;
+        pinLinks.Add(holding.item, pin);
+
+        AttachToPin(holding.gameObject, pin.GetComponent<Pin>());
+    }
+
+    private void AttachToPin(GameObject node, Pin pin)
+    {
+        SpringJoint2D joint = attach(node, pin.gameObject);
+        joint.frequency = 2;
+        joint.distance = 0;
+        pin.lineRenderer.enabled = true;
+        pin.target = node.transform;
+        pin.CalculateLineRenderer();
     }
 
     SpringJoint2D attach(GameObject start, GameObject target)
@@ -139,7 +186,8 @@ public class NodeManager : MonoBehaviour
         node.index = index;
         node.item = item;
 
-        node.GetComponent<SpriteRenderer>().color = gradient.Evaluate((float)index / nodeCount);
+        //node.GetComponent<SpriteRenderer>().color = gradient.Evaluate((float)index / nodeCount);
+        node.GetComponent<SpriteRenderer>().color = gradient.Evaluate(((float)item)/int.MaxValue);
 
         nodes.Add(node);
 
@@ -150,7 +198,8 @@ public class NodeManager : MonoBehaviour
     {
         Gradient colorGradient = new Gradient();
 
-        Color startColor = gradient.Evaluate((float)index / nodeCount) * .8f;
+        //Color startColor = gradient.Evaluate((float)index / nodeCount) * .8f;
+        Color startColor = gradient.Evaluate(((float)node.item) / int.MaxValue) * .8f;
         Color endColor;// = gradient.Evaluate((float)(i + 1) / nodeCount)*.8f;
         endColor = directionEndColor;
 
