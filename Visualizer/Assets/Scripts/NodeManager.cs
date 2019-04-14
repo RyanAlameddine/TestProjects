@@ -27,6 +27,8 @@ public class NodeManager : MonoBehaviour
 
     public Gradient gradient;
 
+    public string asmPath = @"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\Trees\Trees\bin\Debug";
+
     List<Node> nodes = new List<Node>();
 
     Dictionary<int, GameObject> pinLinks = new Dictionary<int, GameObject>();
@@ -92,10 +94,12 @@ public class NodeManager : MonoBehaviour
 
     void Start () {
 
-        var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
+        //var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
+        try OUT NEW THINGY RBTREE
+        var asm = Assembly.LoadFrom(asmPath);
 
         //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
-        
+
 
         IRunnable<int> runnable = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x)).First();
 
@@ -172,18 +176,32 @@ public class NodeManager : MonoBehaviour
 
     public void DeletePin(GameObject gameObject)
     {
-        pinLinks.Where(linkPair => linkPair.Value == gameObject).Select((linkPair) =>
+        LinkedList<int> keysToRemove = new LinkedList<int>();
+
+        Rigidbody2D rigidbody = gameObject.GetComponent<Rigidbody2D>();
+
+        foreach (var linkPair in pinLinks)
         {
-            nodes.Where(node => node.GetComponents<SpringJoint2D>().Where(sj => sj.connectedBody == gameObject).Select((joint) => 
+            if (linkPair.Value != gameObject) continue;
+            foreach(Node node in nodes)
             {
-                Destroy(joint);
-                return true;
-            }));
-            pinLinks.Remove(linkPair.Key);
-            return linkPair.Key;
-        });
+                foreach(SpringJoint2D sJ in node.GetComponents<SpringJoint2D>())
+                {
+                    if(sJ.connectedBody == rigidbody)
+                    {
+                        Destroy(sJ);
+                    }
+                }
+            }
+            keysToRemove.AddFirst(linkPair.Key);
+        }
 
+        for(var node = keysToRemove.First; node != null; node = node.Next)
+        {
+            pinLinks.Remove(node.Value);
+        }
 
+        Destroy(gameObject);
     }
 
     private void AttachToPin(GameObject node, Pin pin)

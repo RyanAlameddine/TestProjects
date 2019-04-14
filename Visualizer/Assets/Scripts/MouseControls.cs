@@ -9,12 +9,29 @@ public class MouseControls : MonoBehaviour {
 
     [SerializeField]
     NodeManager nodeManager;
+
+    [SerializeField]
+    float scrollSensitivity = 1;
+
+    float scrollVelocity = 0;
+    Vector3 zoomPosition = Vector3.zero;
+    float lerpPercent = 0.2f;
+
+    Vector3 mousePos = Vector3.zero;
+
+    Vector2? targetPosition = null;
+    Vector2 startPosition = Vector2.zero;
+    Vector2 clickedPosition = Vector2.zero;
+
+    [SerializeField]
+    float panMultiplier = 10;
 	
 	// Update is called once per frame
 	void Update () {
+        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            // Construct a ray from the current mouse coordinates
+            //Grab objects
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit2D hit = Physics2D.Raycast(new Vector2(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y), Vector2.zero, 0f);
 
@@ -27,7 +44,8 @@ public class MouseControls : MonoBehaviour {
         }
         else
         {
-            if (Input.GetKeyDown(KeyCode.Mouse1))
+            //Delete Pins
+            if (!Input.GetKey(KeyCode.Mouse0) && Input.GetKeyDown(KeyCode.Mouse1))
             {
                 // Construct a ray from the current mouse coordinates
                 var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -40,6 +58,27 @@ public class MouseControls : MonoBehaviour {
             }
         }
 
+        //Scrolling smoothly
+        float scrolled = Input.GetAxis("Mouse ScrollWheel") * scrollSensitivity;
+
+        scrollVelocity = Mathf.Lerp(scrollVelocity, scrolled, lerpPercent);
+
+        if(Mathf.Abs(scrollVelocity - scrolled) < 0.001)
+        {
+            scrollVelocity = scrolled;
+        }
+
+        if (Mathf.Abs(scrolled) > 0.5)
+        {
+            targetPosition = null;
+            zoomPosition = mousePos;
+        }
+        if (targetPosition == null)
+        {
+            ZoomOrthoCamera(zoomPosition, scrollVelocity);
+        }
+        
+        //Holding objects and dragging and droppping
         if (holding != null)
         {
             if (Input.GetKey(KeyCode.Mouse0))
@@ -56,5 +95,62 @@ public class MouseControls : MonoBehaviour {
                 holding = null;
             }
         }
+
+        //Pan camera
+        if (Input.GetKeyDown(KeyCode.Mouse2))
+        {
+            clickedPosition = mousePos;
+            startPosition = new Vector2(transform.position.x, transform.position.y);
+        }
+        if (Input.GetKey(KeyCode.Mouse2))
+        {
+            zoomPosition = transform.position;
+            targetPosition = (clickedPosition - new Vector2(mousePos.x, mousePos.y)) + startPosition;
+        }
+        else
+        {
+            clickedPosition = Vector2.zero;
+        }
+
+        if (targetPosition != null)
+        {
+
+            if (clickedPosition != Vector2.zero)
+            {
+                var lerped = Vector2.Lerp(targetPosition.Value, transform.position, .2f);
+                lerped = Vector2.Lerp(lerped, transform.position, .2f);
+                lerped = Vector2.Lerp(lerped, transform.position, .2f);
+                transform.position = new Vector3(lerped.x, lerped.y, -10);
+                Debug.Log(targetPosition);
+            }
+            else
+            {
+                var lerped = Vector2.Lerp(targetPosition.Value, transform.position, .8f);
+                transform.position = new Vector3(lerped.x, lerped.y, -10);
+
+                if (Mathf.Abs((new Vector2(transform.position.x, transform.position.y) - targetPosition.Value).sqrMagnitude) < 0.001)
+                {
+                    transform.position = new Vector3(targetPosition.Value.x, targetPosition.Value.y, -10);
+                }
+            }
+        }
+    }
+
+    void ZoomOrthoCamera(Vector3 zoomTowards, float amount)
+    {
+        if(Camera.main.orthographicSize - amount <= 0)
+        {
+            return;
+        }
+
+        // Calculate how much we will have to move towards the zoomTowards position
+        float multiplier = (1.0f / Camera.main.orthographicSize * amount);
+
+        // Move camera
+        transform.position += (zoomTowards - transform.position) * multiplier;
+
+        // Zoom camera
+        Camera.main.orthographicSize -= amount;
+        
     }
 }

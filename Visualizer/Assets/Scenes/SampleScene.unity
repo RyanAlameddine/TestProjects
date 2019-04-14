@@ -322,6 +322,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   holding: {fileID: 0}
   nodeManager: {fileID: 1310615095}
+  scrollSensitivity: 15
+  panMultiplier: 1
 --- !u!1 &803332661
 GameObject:
   m_ObjectHideFlags: 0

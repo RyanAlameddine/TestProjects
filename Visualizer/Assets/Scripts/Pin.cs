@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class Pin : MonoBehaviour {
 
+    [HideInInspector]
     public LineRenderer lineRenderer;
+
+    [HideInInspector]
     public Transform target;
     
 	void Awake () {
