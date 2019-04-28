@@ -40,6 +40,7 @@ public class NodeManager : MonoBehaviour
     public IEnumerator VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
     {
         Text text = Instantiate(textPrefab, canvas.transform).GetComponent<Text>();
+        Debug.Log(positions.Count());
         text.text = message;
         nodeCount = positions.Count();
         int i = 0;
@@ -95,7 +96,6 @@ public class NodeManager : MonoBehaviour
     void Start () {
 
         //var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
-        try OUT NEW THINGY RBTREE
         var asm = Assembly.LoadFrom(asmPath);
 
         //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
@@ -127,7 +127,6 @@ public class NodeManager : MonoBehaviour
 
             foreach(int connectionIndex in connections[i])
             {
-                Debug.Log(connectionIndex);
                 AttachNodeLine(nodes[i], nodes[connectionIndex].transform);
 
                 attach(nodes[i].gameObject, nodes[connectionIndex].gameObject);
@@ -168,7 +167,8 @@ public class NodeManager : MonoBehaviour
     public void Pin(Node holding, Vector3 position)
     {
         GameObject pin = Instantiate(pinPrefab, position, Quaternion.identity);
-        pin.GetComponent<SpriteRenderer>().color = holding.GetComponent<SpriteRenderer>().color;
+        Color targetColor = holding.GetComponent<SpriteRenderer>().color;
+        pin.GetComponent<SpriteRenderer>().color = new Color(targetColor.r, targetColor.g, targetColor.b, 0.5f);
         pinLinks.Add(holding.item, pin);
 
         AttachToPin(holding.gameObject, pin.GetComponent<Pin>());
@@ -225,8 +225,6 @@ public class NodeManager : MonoBehaviour
         return joint;
     }
 
-
-
     GameObject createNodeObject(Vector3 position, int index, int item)
     {
         GameObject newNode = Instantiate(nodePrefab, position, Quaternion.identity);
@@ -235,7 +233,7 @@ public class NodeManager : MonoBehaviour
         node.item = item;
 
         //node.GetComponent<SpriteRenderer>().color = gradient.Evaluate((float)index / nodeCount);
-        node.GetComponent<SpriteRenderer>().color = gradient.Evaluate(((float)item)/int.MaxValue);
+        node.GetComponent<SpriteRenderer>().color = gradient.Evaluate(((float)item)/int.MaxValue/2 + .5f);
 
         nodes.Add(node);
 
@@ -247,7 +245,7 @@ public class NodeManager : MonoBehaviour
         Gradient colorGradient = new Gradient();
 
         //Color startColor = gradient.Evaluate((float)index / nodeCount) * .8f;
-        Color startColor = gradient.Evaluate(((float)node.item) / int.MaxValue) * .8f;
+        Color startColor = gradient.Evaluate(((float)node.item) / int.MaxValue/2 + 0.5f) * .8f;
         Color endColor;// = gradient.Evaluate((float)(i + 1) / nodeCount)*.8f;
         endColor = directionEndColor;
 

@@ -25,5 +25,7 @@ public class Pin : MonoBehaviour {
     
     void Update () {
         CalculateLineRenderer();
+
+        transform.rotation = Camera.main.transform.rotation;
 	}
 }

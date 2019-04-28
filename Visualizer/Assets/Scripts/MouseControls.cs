@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 
 [RequireComponent(typeof(Camera))]
 public class MouseControls : MonoBehaviour {
@@ -8,10 +9,16 @@ public class MouseControls : MonoBehaviour {
     GameObject holding;
 
     [SerializeField]
+    PostProcessVolume volume;
+
+    [SerializeField]
     NodeManager nodeManager;
 
     [SerializeField]
     float scrollSensitivity = 1;
+
+    [SerializeField]
+    float rotateVelocity = 0;
 
     float scrollVelocity = 0;
     Vector3 zoomPosition = Vector3.zero;
@@ -27,7 +34,7 @@ public class MouseControls : MonoBehaviour {
     float panMultiplier = 10;
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
         mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
@@ -66,6 +73,7 @@ public class MouseControls : MonoBehaviour {
         if(Mathf.Abs(scrollVelocity - scrolled) < 0.001)
         {
             scrollVelocity = scrolled;
+            targetPosition = transform.position;
         }
 
         if (Mathf.Abs(scrolled) > 0.5)
@@ -76,6 +84,11 @@ public class MouseControls : MonoBehaviour {
         if (targetPosition == null)
         {
             ZoomOrthoCamera(zoomPosition, scrollVelocity);
+            volume.enabled = false;
+        }
+        else
+        {
+            volume.enabled = true;
         }
         
         //Holding objects and dragging and droppping
@@ -94,6 +107,16 @@ public class MouseControls : MonoBehaviour {
                 holding.GetComponent<Rigidbody2D>().isKinematic = false;
                 holding = null;
             }
+        }
+
+        if (Input.GetKey(KeyCode.Mouse3))
+        {
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + new Vector3(0, 0, -rotateVelocity));
+            volume.enabled = false;
+        }else if (Input.GetKey(KeyCode.Mouse4))
+        {
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + new Vector3(0, 0, rotateVelocity));
+            volume.enabled = false;
         }
 
         //Pan camera
