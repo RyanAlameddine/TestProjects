@@ -99,7 +99,11 @@ public class MouseControls : MonoBehaviour {
                 holding.transform.position = Camera.main.ScreenToWorldPoint((Vector2)Input.mousePosition) - new Vector3(0, 0, transform.position.z);
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    nodeManager.Pin(holding.GetComponent<Node>(), holding.transform.position);
+                    Node node = holding.GetComponent<Node>();
+                    if (node)
+                    {
+                        nodeManager.Pin(node, holding.transform.position);
+                    }
                 }
             }
             else

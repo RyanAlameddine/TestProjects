@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine.UI;
+using System.IO;
 
 public class NodeManager : MonoBehaviour
 {
@@ -27,7 +28,8 @@ public class NodeManager : MonoBehaviour
 
     public Gradient gradient;
 
-    public string asmPath = @"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\Trees\Trees\bin\Debug";
+    [HideInInspector]
+    public string asmPath;
 
     List<Node> nodes = new List<Node>();
 
@@ -36,6 +38,8 @@ public class NodeManager : MonoBehaviour
     private object lockObject = new object();
 
     CancellationTokenSource tokenSource = new CancellationTokenSource();
+
+    Thread t;
 
     public IEnumerator VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
     {
@@ -96,6 +100,8 @@ public class NodeManager : MonoBehaviour
     void Start () {
 
         //var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
+        asmPath = Path.Combine(Application.dataPath, "Exes", "LinkedList.exe");
+
         var asm = Assembly.LoadFrom(asmPath);
 
         //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
@@ -112,7 +118,7 @@ public class NodeManager : MonoBehaviour
                 Monitor.Wait(lockObject);
             }
         };
-        Thread t = new Thread(() =>
+        t = new Thread(() =>
         {
             runnable.Run(tokenSource.Token).Wait();
         });
@@ -166,6 +172,11 @@ public class NodeManager : MonoBehaviour
 
     public void Pin(Node holding, Vector3 position)
     {
+        if (pinLinks.ContainsKey(holding.item))
+        {
+            return;
+        }
+
         GameObject pin = Instantiate(pinPrefab, position, Quaternion.identity);
         Color targetColor = holding.GetComponent<SpriteRenderer>().color;
         pin.GetComponent<SpriteRenderer>().color = new Color(targetColor.r, targetColor.g, targetColor.b, 0.5f);
@@ -176,6 +187,11 @@ public class NodeManager : MonoBehaviour
 
     public void DeletePin(GameObject gameObject)
     {
+        if (!gameObject.GetComponent<Pin>())
+        {
+            return;
+        }
+
         LinkedList<int> keysToRemove = new LinkedList<int>();
 
         Rigidbody2D rigidbody = gameObject.GetComponent<Rigidbody2D>();
@@ -257,16 +273,70 @@ public class NodeManager : MonoBehaviour
 	void Update () {
         if (Input.GetKeyDown(KeyCode.C))
         {
-            lock (lockObject)
-            {
-                Monitor.PulseAll(lockObject);
-            }
+            pulse();
         }
 	}
+
+    public void pulse()
+    {
+        lock (lockObject)
+        {
+            Monitor.PulseAll(lockObject);
+        }
+    }
     
     private void OnDestroy()
     {
         tokenSource?.Cancel();
         Debug.Log("Deleted");
+    }
+
+    public void ChangeASM(Dropdown dropdown)
+    {
+        tokenSource.Cancel();
+        tokenSource = new CancellationTokenSource();
+
+        int targetASM = dropdown.value;
+        string targetASMname = "";
+
+        switch(targetASM)
+        {
+            case 0:
+                targetASMname = "LinkedList";
+                break;
+            case 1:
+                targetASMname = "DCLL";
+                break;
+            case 2:
+                targetASMname = "Tree";
+                break;
+        }
+
+        asmPath = Path.Combine(Application.dataPath, "Exes", targetASMname + ".exe");
+
+        var asm = Assembly.LoadFrom(asmPath);
+
+        //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
+
+
+        var runnables = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x));
+        var last = runnables.Last();
+        IRunnable<int> runnable = runnables.First();
+
+        runnable.Visualizable.OnUpdate += (positions, connections, message) =>
+        {
+            UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, connections, message));
+
+            lock (lockObject)
+            {
+                Monitor.Wait(lockObject);
+            }
+        };
+        t = new Thread(() =>
+        {
+            runnable.Run(tokenSource.Token).Wait();
+        });
+
+        t.Start();
     }
 }
