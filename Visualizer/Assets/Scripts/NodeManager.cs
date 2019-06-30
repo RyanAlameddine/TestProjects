@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using System.Linq;
-
-
-using CommonVisInterface;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine.UI;
 using System.IO;
 
@@ -35,13 +29,14 @@ public class NodeManager : MonoBehaviour
 
     Dictionary<int, GameObject> pinLinks = new Dictionary<int, GameObject>();
 
-    private object lockObject = new object();
+    public static bool pulsed = false;
 
-    CancellationTokenSource tokenSource = new CancellationTokenSource();
+    Runnables runnables;
 
-    Thread t;
+    Coroutine runnable;
 
-    public IEnumerator VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
+
+    public void VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
     {
         Text text = Instantiate(textPrefab, canvas.transform).GetComponent<Text>();
         Debug.Log(positions.Count());
@@ -93,23 +88,26 @@ public class NodeManager : MonoBehaviour
         }
 
         GenerateNodes(connections);
-        yield return null;
     }
 
 
     void Start () {
 
         //var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
-        asmPath = Path.Combine(Application.dataPath, "Exes", "LinkedList.exe");
+        
+        //asmPath = Path.Combine(Application.dataPath, "Exes", "LinkedList.exe").Replace('\\', '/');
 
-        var asm = Assembly.LoadFrom(asmPath);
+        //Debug.Log("Attempting to load Exe from " + asmPath);
+
+        //var asm = Assembly.LoadFrom(asmPath);
 
         //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
 
+        //IRunnable<int> runnable = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x)).First();
 
-        IRunnable<int> runnable = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x)).First();
+        //IRunnable<int> runnable = new ListProjects.SinglyLinkedListRunnable();
 
-        runnable.Visualizable.OnUpdate += (positions, connections, message) =>
+        /*runnable.Visualizable.OnUpdate += (positions, connections, message) =>
         {
             UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, connections, message));
 
@@ -121,9 +119,11 @@ public class NodeManager : MonoBehaviour
         t = new Thread(() =>
         {
             runnable.Run(tokenSource.Token).Wait();
-        });
+        });*/
 
-        t.Start();
+        runnables = new Runnables(VisualizerUpdate);
+        runnable = StartCoroutine(runnables.SinglyLinked());
+        //t.Start();
 	}
 
     void GenerateNodes(List<List<int>> connections)
@@ -279,51 +279,47 @@ public class NodeManager : MonoBehaviour
 
     public void pulse()
     {
-        lock (lockObject)
-        {
-            Monitor.PulseAll(lockObject);
-        }
+        pulsed = true;
     }
     
     private void OnDestroy()
     {
-        tokenSource?.Cancel();
         Debug.Log("Deleted");
     }
 
     public void ChangeASM(Dropdown dropdown)
     {
-        tokenSource.Cancel();
-        tokenSource = new CancellationTokenSource();
-
         int targetASM = dropdown.value;
         string targetASMname = "";
-
-        switch(targetASM)
+        StopCoroutine(runnable);
+        switch (targetASM)
         {
             case 0:
                 targetASMname = "LinkedList";
+                runnable = StartCoroutine(runnables.SinglyLinked());
                 break;
             case 1:
                 targetASMname = "DCLL";
+                runnable = StartCoroutine(runnables.DoublyLinked());
                 break;
             case 2:
                 targetASMname = "Tree";
+                runnable = StartCoroutine(runnables.Tree());
                 break;
         }
 
-        asmPath = Path.Combine(Application.dataPath, "Exes", targetASMname + ".exe");
+        //asmPath = Path.Combine(Application.dataPath, "Exes", targetASMname + ".exe");
 
-        var asm = Assembly.LoadFrom(asmPath);
+        //var asm = Assembly.LoadFrom(asmPath);
 
         //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
 
 
-        var runnables = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x));
-        var last = runnables.Last();
-        IRunnable<int> runnable = runnables.First();
+        //var runnables = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x));
+        //var last = runnables.Last();
+        //IRunnable<int> runnable = runnables.First();
 
-        runnable.Visualizable.OnUpdate += (positions, connections, message) =>
+        /*runnable.Visualizable.OnUpdate += (positions, connections, message) =>
         {
             UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, connections, message));
 
@@ -337,6 +333,8 @@ public class NodeManager : MonoBehaviour
             runnable.Run(tokenSource.Token).Wait();
         });
 
-        t.Start();
+        t.Start();*/
+
+
     }
 }
