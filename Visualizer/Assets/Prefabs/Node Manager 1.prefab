@@ -57,19 +57,19 @@ MonoBehaviour:
     type: 3}
   gradient:
     serializedVersion: 2
-    key0: {r: 0.735849, g: 0.03818085, b: 0.34549522, a: 1}
-    key1: {r: 0.65882355, g: 0.047058802, b: 0.630566, a: 1}
-    key2: {r: 0.06030856, g: 0.058823522, b: 0.62352943, a: 0}
-    key3: {r: 0.07450979, g: 0.69564605, b: 0.7529412, a: 0}
-    key4: {r: 0.754717, g: 0.0747597, b: 0.0747597, a: 0}
-    key5: {r: 0.754717, g: 0.0747597, b: 0.0747597, a: 0}
+    key0: {r: 0.018912422, g: 0.027296603, b: 0.047169805, a: 1}
+    key1: {r: 0.18419512, g: 0.944, b: 0.23024385, a: 1}
+    key2: {r: 0.9716981, g: 0.86240184, b: 0.0779192, a: 0}
+    key3: {r: 0.9339623, g: 0.3341258, b: 0.066082224, a: 0}
+    key4: {r: 0.99300003, g: 0.16902126, b: 0.53347325, a: 0}
+    key5: {r: 0.97900003, g: 0.09688019, b: 0.21449606, a: 0}
     key6: {r: 0.754717, g: 0.0747597, b: 0.0747597, a: 0}
     key7: {r: 0.754717, g: 0.0747597, b: 0.0747597, a: 0}
     ctime0: 0
-    ctime1: 16384
-    ctime2: 42212
-    ctime3: 65535
-    ctime4: 65535
+    ctime1: 11951
+    ctime2: 25250
+    ctime3: 39707
+    ctime4: 55705
     ctime5: 65535
     ctime6: 65535
     ctime7: 65535
@@ -82,6 +82,8 @@ MonoBehaviour:
     atime6: 0
     atime7: 0
     m_Mode: 0
-    m_NumColorKeys: 4
+    m_NumColorKeys: 6
     m_NumAlphaKeys: 2
-  asmPath: \\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\Trees\Trees\bin\Debug\Trees.exe
+  asmPath: 
+  dropdown: {fileID: 0}
+  inputField: {fileID: 0}

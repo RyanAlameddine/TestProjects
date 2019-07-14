@@ -27,20 +27,30 @@ public class NodeManager : MonoBehaviour
 
     List<Node> nodes = new List<Node>();
 
+    public CommandManager commandManager;
+
     Dictionary<int, GameObject> pinLinks = new Dictionary<int, GameObject>();
 
     public static bool pulsed = false;
 
     Runnables runnables;
 
-    Coroutine runnable;
+    private int targetASM;
 
+    public Vector2 GradientRange = new Vector2(0, 100);
+
+    //Coroutine runnable;
+
+    [SerializeField]
+    Dropdown dropdown;
+    [SerializeField]
+    InputField valueField;
+    [SerializeField]
+    InputField indexField;
 
     public void VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
     {
-        Text text = Instantiate(textPrefab, canvas.transform).GetComponent<Text>();
-        Debug.Log(positions.Count());
-        text.text = message;
+        
         nodeCount = positions.Count();
         int i = 0;
         Dictionary<int, Vector3> existingPositions = new Dictionary<int, Vector3>();
@@ -90,40 +100,17 @@ public class NodeManager : MonoBehaviour
         GenerateNodes(connections);
     }
 
+    public static Text CreateScrollingText(GameObject textPrefab, GameObject canvas, string message)
+    {
+        Text text = Instantiate(textPrefab, canvas.transform).GetComponent<Text>();
+        text.text = message;
+        return text;
+    }
+
 
     void Start () {
-
-        //var asm = Assembly.LoadFrom(@"\\GMRDC1\Folder Redirection\Ryan.Alameddine\Documents\Visual Studio 2017\Projects\DataStructures\ListProjects\ListProjects\bin\Debug\ListProjects.exe");
-        
-        //asmPath = Path.Combine(Application.dataPath, "Exes", "LinkedList.exe").Replace('\\', '/');
-
-        //Debug.Log("Attempting to load Exe from " + asmPath);
-
-        //var asm = Assembly.LoadFrom(asmPath);
-
-        //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
-
-        //IRunnable<int> runnable = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x)).First();
-
-        //IRunnable<int> runnable = new ListProjects.SinglyLinkedListRunnable();
-
-        /*runnable.Visualizable.OnUpdate += (positions, connections, message) =>
-        {
-            UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, connections, message));
-
-            lock (lockObject)
-            {
-                Monitor.Wait(lockObject);
-            }
-        };
-        t = new Thread(() =>
-        {
-            runnable.Run(tokenSource.Token).Wait();
-        });*/
-
-        runnables = new Runnables(VisualizerUpdate);
-        runnable = StartCoroutine(runnables.SinglyLinked());
-        //t.Start();
+        commandManager = new CommandManager(VisualizerUpdate, dropdown, valueField, indexField, nodes);
+        commandManager.llCreate();
 	}
 
     void GenerateNodes(List<List<int>> connections)
@@ -138,23 +125,13 @@ public class NodeManager : MonoBehaviour
                 attach(nodes[i].gameObject, nodes[connectionIndex].gameObject);
                 attach(nodes[connectionIndex].gameObject, nodes[i].gameObject);
             }
-
-            /*
-            if (i > 0)
-            {
-                AttachNodeLine(nodes[i - 1], nodes[i].transform);
-
-                attach(nodes[i - 1].gameObject, nodes[i].gameObject);
-                attach(nodes[i].gameObject, nodes[i - 1].gameObject);
-            }*/
         }
 
-        //nodes[nodes.Count - 1].GetComponent<LineRenderer>().enabled = false;
-        if (startPin != null)
+        if (startPin != null && nodes.Count > 0)
         {
             AttachToPin(nodes[0].gameObject, startPin);
         }
-        if (endPin != null)
+        if (endPin != null && nodes.Count > 0)
         {
             AttachToPin(nodes[nodes.Count - 1].gameObject, endPin);
         }
@@ -247,9 +224,9 @@ public class NodeManager : MonoBehaviour
         Node node = newNode.GetComponent<Node>();
         node.index = index;
         node.item = item;
+        node.GetComponentInChildren<TextMesh>().text = item.ToString();
 
-        //node.GetComponent<SpriteRenderer>().color = gradient.Evaluate((float)index / nodeCount);
-        node.GetComponent<SpriteRenderer>().color = gradient.Evaluate(((float)item)/int.MaxValue/2 + .5f);
+        node.GetComponent<SpriteRenderer>().color = gradient.Evaluate((item - GradientRange.x) / (GradientRange.y - GradientRange.x));
 
         nodes.Add(node);
 
@@ -260,18 +237,16 @@ public class NodeManager : MonoBehaviour
     {
         Gradient colorGradient = new Gradient();
 
-        //Color startColor = gradient.Evaluate((float)index / nodeCount) * .8f;
-        Color startColor = gradient.Evaluate(((float)node.item) / int.MaxValue/2 + 0.5f) * .8f;
-        Color endColor;// = gradient.Evaluate((float)(i + 1) / nodeCount)*.8f;
+        Color startColor = gradient.Evaluate((node.item - GradientRange.x) / (GradientRange.y - GradientRange.x)) * .8f;
+        Color endColor;
         endColor = directionEndColor;
 
         colorGradient.colorKeys = new GradientColorKey[] { new GradientColorKey(startColor, 0), new GradientColorKey(endColor, 1) };
         lineRenderer.colorGradient = colorGradient;
     }
 	
-	// Update is called once per frame
 	void Update () {
-        if (Input.GetKeyDown(KeyCode.C))
+        if (Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.Return))
         {
             pulse();
         }
@@ -280,6 +255,12 @@ public class NodeManager : MonoBehaviour
     public void pulse()
     {
         pulsed = true;
+        commandManager.pulse();
+    }
+
+    public void DropdownSelect()
+    {
+        commandManager.DropdownSelect();
     }
     
     private void OnDestroy()
@@ -289,52 +270,28 @@ public class NodeManager : MonoBehaviour
 
     public void ChangeASM(Dropdown dropdown)
     {
-        int targetASM = dropdown.value;
+        targetASM = dropdown.value;
         string targetASMname = "";
-        StopCoroutine(runnable);
+        //StopCoroutine(runnable);
         switch (targetASM)
         {
             case 0:
                 targetASMname = "LinkedList";
-                runnable = StartCoroutine(runnables.SinglyLinked());
+                commandManager.llCreate();
+                //runnable = StartCoroutine(runnables.SinglyLinked());
                 break;
             case 1:
                 targetASMname = "DCLL";
-                runnable = StartCoroutine(runnables.DoublyLinked());
+                commandManager.cdllCreate();
+                //runnable = StartCoroutine(runnables.DoublyLinked());
                 break;
             case 2:
                 targetASMname = "Tree";
-                runnable = StartCoroutine(runnables.Tree());
+                commandManager.tCreate();
+                //runnable = StartCoroutine(runnables.Tree());
                 break;
         }
 
-        //asmPath = Path.Combine(Application.dataPath, "Exes", targetASMname + ".exe");
-
-        //var asm = Assembly.LoadFrom(asmPath);
-
-        //var listOfTypes = asm.GetTypes().Where(x => x.GetInterface(typeof(IVisualizable<int>).Name) != null).Select(x => (IVisualizable<int>)System.Activator.CreateInstance(x.MakeGenericType(typeof(int)))).ToList();
-
-
-        //var runnables = asm.GetTypes().Where(x => x.GetInterface(typeof(IRunnable<int>).Name) != null).Select(x => (IRunnable<int>)System.Activator.CreateInstance(x));
-        //var last = runnables.Last();
-        //IRunnable<int> runnable = runnables.First();
-
-        /*runnable.Visualizable.OnUpdate += (positions, connections, message) =>
-        {
-            UnityMainThreadDispatcher.Instance().Enqueue(VisualizerUpdate(positions, connections, message));
-
-            lock (lockObject)
-            {
-                Monitor.Wait(lockObject);
-            }
-        };
-        t = new Thread(() =>
-        {
-            runnable.Run(tokenSource.Token).Wait();
-        });
-
-        t.Start();*/
-
-
+        VisualizerUpdate(new int[0], new List<List<int>>() { }, $"Switched to {targetASMname}");
     }
 }

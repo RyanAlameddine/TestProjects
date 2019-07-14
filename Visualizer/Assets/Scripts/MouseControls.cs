@@ -148,7 +148,6 @@ public class MouseControls : MonoBehaviour {
                 lerped = Vector2.Lerp(lerped, transform.position, .2f);
                 lerped = Vector2.Lerp(lerped, transform.position, .2f);
                 transform.position = new Vector3(lerped.x, lerped.y, -10);
-                Debug.Log(targetPosition);
             }
             else
             {

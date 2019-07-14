@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class TextScroll : MonoBehaviour {
 
     Text text;
+    float seconds = 0;
 
 	// Use this for initialization
 	void Start () {
@@ -14,8 +15,13 @@ public class TextScroll : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update () {
-        transform.position += new Vector3(0, 30 * Time.deltaTime, 0);
-        text.color = new Color(text.color.r, text.color.g, text.color.b, text.color.a - .3f * Time.deltaTime);
+	void FixedUpdate () {
+        //transform.position += new Vector3(0, 30 * Time.deltaTime, 0);
+        //text.color = new Color(text.color.r, text.color.g, text.color.b, text.color.a - .3f * Time.deltaTime);
+        seconds += Time.fixedDeltaTime;
+        if(seconds > 5)
+        {
+            Destroy(gameObject);
+        }
 	}
 }
