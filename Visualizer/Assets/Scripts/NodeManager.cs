@@ -48,6 +48,9 @@ public class NodeManager : MonoBehaviour
     [SerializeField]
     InputField indexField;
 
+    [SerializeField]
+    SettingsManager settingsManager;
+
     public void VisualizerUpdate(IEnumerable<int> positions, List<List<int>> connections, string message)
     {
         
@@ -98,6 +101,7 @@ public class NodeManager : MonoBehaviour
         }
 
         GenerateNodes(connections);
+        NodeManager.CreateScrollingText(textPrefab, canvas.gameObject, message);
     }
 
     public static Text CreateScrollingText(GameObject textPrefab, GameObject canvas, string message)
@@ -109,7 +113,7 @@ public class NodeManager : MonoBehaviour
 
 
     void Start () {
-        commandManager = new CommandManager(VisualizerUpdate, dropdown, valueField, indexField, nodes);
+        commandManager = new CommandManager(VisualizerUpdate, dropdown, valueField, indexField, nodes, textPrefab, canvas);
         commandManager.llCreate();
 	}
 
@@ -244,11 +248,36 @@ public class NodeManager : MonoBehaviour
         colorGradient.colorKeys = new GradientColorKey[] { new GradientColorKey(startColor, 0), new GradientColorKey(endColor, 1) };
         lineRenderer.colorGradient = colorGradient;
     }
-	
-	void Update () {
-        if (Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.Return))
+
+    public void ResetNodeGradients()
+    {
+        foreach(Node node in nodes)
         {
-            pulse();
+            node.GetComponent<SpriteRenderer>().color = gradient.Evaluate((node.item - GradientRange.x) / (GradientRange.y - GradientRange.x));
+            foreach(LineRenderer lineRenderer in node.GetComponentsInChildren<LineRenderer>())
+            {
+                generateColorGradient(node, lineRenderer);
+            }
+        }
+    }
+
+    void Update () {
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            if (!settingsManager.IsFocused)
+            {
+                pulse();
+            }
+        }
+        if (Input.GetKey(KeyCode.T) && Input.GetKey(KeyCode.H) && Input.GetKeyDown(KeyCode.D))
+        {
+            int x = int.Parse(valueField.text);
+            for(int i = 0; i < 100; i++)
+            {
+                valueField.text = (x + i).ToString();
+                pulse();
+            }
+
         }
 	}
 
@@ -291,7 +320,14 @@ public class NodeManager : MonoBehaviour
                 //runnable = StartCoroutine(runnables.Tree());
                 break;
         }
-
         VisualizerUpdate(new int[0], new List<List<int>>() { }, $"Switched to {targetASMname}");
+        if (startPin)
+        {
+            startPin.lineRenderer.enabled = false;
+        }
+        if (endPin)
+        {
+            endPin.lineRenderer.enabled = false;
+        }
     }
 }

@@ -21,18 +21,19 @@ public class CommandManager
     Action<IEnumerable<int>, List<List<int>>, string> action;
     List<Node> nodes;
 
-    [SerializeField]
-    GameObject textPrefab; FixedJoint THESE TWO VARIABLES
-    [SerializeField]
+    GameObject textPrefab;
     Canvas canvas;
 
-    public CommandManager(Action<IEnumerable<int>, List<List<int>>, string> action, Dropdown dropdown, InputField inputField, InputField inputField2, List<Node> nodes)
+    public CommandManager(Action<IEnumerable<int>, List<List<int>>, string> action, Dropdown dropdown, InputField inputField, InputField inputField2, List<Node> nodes, GameObject textPrefab, Canvas canvas)
     {
         this.nodes = nodes;
         this.action = action;
         this.dropdown = dropdown;
         this.valueField = inputField;
         this.indexField = inputField2;
+
+        this.textPrefab = textPrefab;
+        this.canvas = canvas;
     }
 
     List<Dropdown.OptionData> llOptions = new List<Dropdown.OptionData>() { new Dropdown.OptionData("AddToFront"), new Dropdown.OptionData("AddToBack"), new Dropdown.OptionData("RemoveFromFront"), new Dropdown.OptionData("RemoveFromEnd"), new Dropdown.OptionData("RemoveAt") };
@@ -47,6 +48,7 @@ public class CommandManager
 
         dropdown.ClearOptions();
         dropdown.AddOptions(llOptions);
+        DropdownSelect();
     }
 
     List<Dropdown.OptionData> tOptions = new List<Dropdown.OptionData>() { new Dropdown.OptionData("Insert"), new Dropdown.OptionData("Delete") };
@@ -61,6 +63,7 @@ public class CommandManager
 
         dropdown.ClearOptions();
         dropdown.AddOptions(tOptions);
+        DropdownSelect();
     }
 
     List<Dropdown.OptionData> cdllOptions = new List<Dropdown.OptionData>() { new Dropdown.OptionData("AddToFront"), new Dropdown.OptionData("AddToEnd"), new Dropdown.OptionData("AddAt"), new Dropdown.OptionData("RemoveFromFront"), new Dropdown.OptionData("RemoveFromEnd"), new Dropdown.OptionData("RemoveAt") };
@@ -75,6 +78,7 @@ public class CommandManager
 
         dropdown.ClearOptions();
         dropdown.AddOptions(cdllOptions);
+        DropdownSelect();
     }
 
     public void DropdownSelect()
@@ -88,6 +92,10 @@ public class CommandManager
         {
             valueField.interactable = true;
             indexField.interactable = true;
+        }else if(dropdown.options[dropdown.value].text == "RemoveFromFront" || dropdown.options[dropdown.value].text == "RemoveFromEnd")
+        {
+            valueField.interactable = false;
+            indexField.interactable = false;
         }
         else
         {
@@ -98,23 +106,39 @@ public class CommandManager
 
     public void pulse()
     {
-        switch (selection)
+        try
         {
-            case 0:
-                llRun(dropdown.value);
-                break;
-            case 1:
-                tRun(dropdown.value);
-                break;
-            case 2:
-                cdllRun(dropdown.value);
-                break;
+            switch (selection)
+            {
+                case 0:
+                    llRun(dropdown.value);
+                    break;
+                case 1:
+                    tRun(dropdown.value);
+                    break;
+                case 2:
+                    cdllRun(dropdown.value);
+                    break;
+            }
+        } catch(Exception e)
+        {
+            Text text = NodeManager.CreateScrollingText(textPrefab, canvas.gameObject, "Error: " + e.GetType().ToString());
+            text.color = Color.red;
         }
 
         valueField.text = "";
         indexField.text = "";
-        valueField.Select();
-        valueField.ActivateInputField();
+
+        if (valueField.enabled)
+        {
+            valueField.Select();
+            valueField.ActivateInputField();
+        }
+        else
+        {
+            indexField.Select();
+            indexField.ActivateInputField();
+        }
     }
     
     bool checkDuplicate(int value)
@@ -123,7 +147,8 @@ public class CommandManager
         {
             if(value == node.item)
             {
-                NodeManager.CreateScrollingText(textPrefab, canvas.gameObject, "ERROR: DUPLICATE ITEM FOUND");
+                Text text = NodeManager.CreateScrollingText(textPrefab, canvas.gameObject, "Error: Nodes cannot contain the same value");
+                text.color = Color.red;
                 return true;
             }
         }
