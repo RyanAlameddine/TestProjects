@@ -13,7 +13,7 @@ I find the topmost window on the screen, identify it's bounds and use that as th
 
 # Arbitrary Graph-Based Data Structure Visualizer
 
-![treevis](https://github.com/RyanAlameddine/TestProjects/raw/master/READMEResources/treevis.gif)
+![treevis](https://github.com/RyanAlameddine/TestProjects/raw/master/READMEResources/treevis.png)
 
 I created a special visualizer which allows users to visualize arbitrary data structures which can take a graph-like form. 
 The circles are nodes, the arrowed lines are edges, and the triangles + dashed lines are "pins" which help with visualization.
